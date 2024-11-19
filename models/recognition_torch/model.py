@@ -79,11 +79,11 @@ class Network(nn.Module):
         self.rb6 = ResidualBlock(256, 512, skip_conv = True, stride=2, activation=activation, dropout=dropout)
         self.rb7 = ResidualBlock(512, 512, skip_conv = True, stride=1, activation=activation, dropout=dropout)
 
-        self.lstm = nn.LSTM(512, 512, bidirectional=True, num_layers=1, batch_first=True)
-        self.lstm_dropout = nn.Dropout(p=dropout)
+        self.lstm1 = nn.LSTM(512, 512, bidirectional=True, num_layers=1, batch_first=True)
+        self.lstm_dropout1 = nn.Dropout(p=dropout)
         
-        self.blstm2 = nn.LSTM(512 * 2, 512, bidirectional=True, num_layers=1, batch_first=True)  # Adjust input size for bidirectional
-        self.blstm_dropout2 = nn.Dropout(p=dropout)
+        self.lstm2 = nn.LSTM(512 * 2, 512, bidirectional=True, num_layers=1, batch_first=True)  # Adjust input size for bidirectional
+        self.lstm_dropout2 = nn.Dropout(p=dropout)
 
         self.output = nn.Linear(512 * 2, num_chars + 1) 
 
@@ -105,8 +105,8 @@ class Network(nn.Module):
 
         x = x.reshape(x.size(0), -1, x.size(1))
 
-        x, _ = self.lstm(x)
-        x = self.lstm_dropout(x)
+        x, _ = self.lstm1(x)
+        x = self.lstm_dropout1(x)
         
         x, _ = self.lstm2(x)
         x = self.lstm_dropout2(x)
