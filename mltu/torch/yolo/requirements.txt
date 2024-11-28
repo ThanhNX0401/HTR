@@ -1,4 +1,0 @@
-ultralytics==8.1.9
-torch==2.0.0
-torchvision==0.15.1
-torch_pruning==1.3.6
