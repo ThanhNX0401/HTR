@@ -1,0 +1,17 @@
+torch
+torchvision>=0.5
+# opencv-python-headless
+scipy
+numpy
+Pillow
+scikit-image
+python-bidi
+PyYAML
+Shapely
+pyclipper
+ninja
+fire #==0.7.0
+lmdb #==1.5.1
+opencv-python #==4.10.0
+natsort #==8.4.0
+nltk #==3.9.1
