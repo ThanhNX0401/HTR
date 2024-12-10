@@ -71,18 +71,15 @@ class Network(nn.Module):
 
         self.rb1 = ResidualBlock(3, 64, skip_conv = True, stride=1, activation=activation, dropout=dropout)
         
-        self.rb2 = ResidualBlock(64, 64, skip_conv = True, stride=2, activation=activation, dropout=dropout)
-        self.rb3 = ResidualBlock(64, 64, skip_conv = False, stride=1, activation=activation, dropout=dropout)
+        self.rb2 = ResidualBlock(64, 128, skip_conv = True, stride=2, activation=activation, dropout=dropout)
+        self.rb3 = ResidualBlock(128, 128, skip_conv = False, stride=1, activation=activation, dropout=dropout)
 
-        self.rb4 = ResidualBlock(64, 128, skip_conv = True, stride=2, activation=activation, dropout=dropout)
-        self.rb5 = ResidualBlock(128, 128, skip_conv = False, stride=1, activation=activation, dropout=dropout)
+        self.rb4 = ResidualBlock(128, 256, skip_conv = True, stride=2, activation=activation, dropout=dropout)
+        self.rb5 = ResidualBlock(256, 256, skip_conv = False, stride=1, activation=activation, dropout=dropout)
 
-        self.rb6 = ResidualBlock(128, 256, skip_conv = True, stride=2, activation=activation, dropout=dropout)
-        self.rb7 = ResidualBlock(256, 256, skip_conv = True, stride=1, activation=activation, dropout=dropout)
+        self.rb6 = ResidualBlock(256, 512, skip_conv = True, stride=2, activation=activation, dropout=dropout)
+        self.rb7 = ResidualBlock(512, 512, skip_conv = True, stride=1, activation=activation, dropout=dropout)
         
-        self.rb8 = ResidualBlock(256, 512, skip_conv = True, stride=1, activation=activation, dropout=dropout)
-        self.rb9 = ResidualBlock(512, 512, skip_conv = True, stride=1, activation=activation, dropout=dropout)
-
         self.lstm1 = nn.LSTM(512, 256, bidirectional=True, num_layers=1, batch_first=True)
         self.lstm_dropout1 = nn.Dropout(p=dropout)
         
@@ -106,8 +103,6 @@ class Network(nn.Module):
         x = self.rb5(x)
         x = self.rb6(x)
         x = self.rb7(x)
-        x = self.rb8(x)
-        x = self.rb9(x)
 
         x = x.reshape(x.size(0), -1, x.size(1))
 
