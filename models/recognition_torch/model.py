@@ -77,7 +77,7 @@ class Network(nn.Module):
         self.rb4 = ResidualBlock(32, 64, skip_conv = True, stride=2, activation=activation, dropout=dropout)
         self.rb5 = ResidualBlock(64, 64, skip_conv = False, stride=1, activation=activation, dropout=dropout)
 
-        self.rb6 = ResidualBlock(128, 128, skip_conv = True, stride=2, activation=activation, dropout=dropout)
+        self.rb6 = ResidualBlock(64, 128, skip_conv = True, stride=2, activation=activation, dropout=dropout)
         self.rb7 = ResidualBlock(128, 128, skip_conv = True, stride=1, activation=activation, dropout=dropout)
         
         self.rb8 = ResidualBlock(128, 128, skip_conv = True, stride=2, activation=activation, dropout=dropout)
