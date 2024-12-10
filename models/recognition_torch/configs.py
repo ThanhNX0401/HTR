@@ -9,8 +9,8 @@ class ModelConfigs(BaseModelConfigs):
         super().__init__()
         self.model_path = os.path.join("Models", datetime.strftime(datetime.now(), "%Y%m%d%H%M"))
         self.vocab = ""
-        self.height = 96 #32
-        self.width = 1408 #128
+        self.height = 32
+        self.width = 128
         self.max_text_length = 0
         self.batch_size = 64
         self.learning_rate = 0.002
