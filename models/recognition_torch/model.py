@@ -69,24 +69,28 @@ class Network(nn.Module):
     def __init__(self, num_chars: int, activation: str="leaky_relu", dropout: float=0.2):
         super(Network, self).__init__()
 
-        self.rb1 = ResidualBlock(3, 64, skip_conv = True, stride=1, activation=activation, dropout=dropout)
+        self.rb1 = ResidualBlock(3, 32, skip_conv = True, stride=1, activation=activation, dropout=dropout)
         
-        self.rb2 = ResidualBlock(64, 128, skip_conv = True, stride=2, activation=activation, dropout=dropout)
-        self.rb3 = ResidualBlock(128, 128, skip_conv = False, stride=1, activation=activation, dropout=dropout)
+        self.rb2 = ResidualBlock(32, 32, skip_conv = True, stride=2, activation=activation, dropout=dropout)
+        self.rb3 = ResidualBlock(32, 32, skip_conv = False, stride=1, activation=activation, dropout=dropout)
 
-        self.rb4 = ResidualBlock(128, 256, skip_conv = True, stride=2, activation=activation, dropout=dropout)
-        self.rb5 = ResidualBlock(256, 256, skip_conv = False, stride=1, activation=activation, dropout=dropout)
+        self.rb4 = ResidualBlock(32, 64, skip_conv = True, stride=2, activation=activation, dropout=dropout)
+        self.rb5 = ResidualBlock(64, 64, skip_conv = False, stride=1, activation=activation, dropout=dropout)
 
-        self.rb6 = ResidualBlock(256, 512, skip_conv = True, stride=2, activation=activation, dropout=dropout)
-        self.rb7 = ResidualBlock(512, 512, skip_conv = True, stride=1, activation=activation, dropout=dropout)
+        self.rb6 = ResidualBlock(128, 128, skip_conv = True, stride=2, activation=activation, dropout=dropout)
+        self.rb7 = ResidualBlock(128, 128, skip_conv = True, stride=1, activation=activation, dropout=dropout)
         
-        self.lstm1 = nn.LSTM(512, 256, bidirectional=True, num_layers=1, batch_first=True)
+        self.rb8 = ResidualBlock(128, 128, skip_conv = True, stride=2, activation=activation, dropout=dropout)
+        self.rb9 = ResidualBlock(128, 128, skip_conv = True, stride=1, activation=activation, dropout=dropout)
+        
+        
+        self.lstm1 = nn.LSTM(256, 128, bidirectional=True, num_layers=1, batch_first=True)
         self.lstm_dropout1 = nn.Dropout(p=dropout)
         
-        self.lstm2 = nn.LSTM(512, 256, bidirectional=True, num_layers=1, batch_first=True)  # Adjust input size for bidirectional
+        self.lstm2 = nn.LSTM(256, 128, bidirectional=True, num_layers=1, batch_first=True)  # Adjust input size for bidirectional
         self.lstm_dropout2 = nn.Dropout(p=dropout)
 
-        self.output = nn.Linear(512, num_chars + 1) 
+        self.output = nn.Linear(256, num_chars + 1) 
 
     def forward(self, images: torch.Tensor) -> torch.Tensor:
         # normalize images between 0 and 1
