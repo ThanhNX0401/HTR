@@ -133,16 +133,18 @@ class WandbCallback(Callback):
         self.project_name = project_name
         self.run_name = run_name
         self.config = config
+        self.run = None
 
     def on_train_begin(self, logs=None):
-        wandb.init(project=self.project_name, name=self.run_name, config=self.config)
+        self.run = wandb.init(project=self.project_name, name=self.run_name, config=self.config)
 
     def on_epoch_end(self, epoch, logs=None):
         if logs:
             wandb.log(logs, step=epoch)
 
     def on_train_end(self, logs=None):
-        wandb.finish()
+        if self.run is not None:
+            self.run.finish()
         
 def assign_mode(mode: str):
     if mode not in ["min", "max", "max_equal", "min_equal"]:

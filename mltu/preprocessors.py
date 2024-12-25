@@ -305,6 +305,8 @@ class GrayscaleConverter:
         if len(image_numpy.shape) == 3 and image_numpy.shape[-1] == 3:
             # Convert to grayscale using weighted sum
             grayscale = np.dot(image_numpy[..., :3], [0.2989, 0.5870, 0.1140])
+            # Ensure the values are in uint8 range [0, 255]
+            grayscale = np.clip(grayscale, 0, 255).astype(np.uint8)
             # Stack the grayscale channel 3 times to maintain (h,w,3) shape
             grayscale_3channel = np.stack([grayscale] * 3, axis=-1)
             image.update(grayscale_3channel)
