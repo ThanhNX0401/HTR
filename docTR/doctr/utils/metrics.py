@@ -73,20 +73,40 @@ class TextMatch:
     def __init__(self) -> None:
         self.reset()
 
+    def _compute_cer(self, gt_word: str, pred_word: str) -> tuple[int, int]:
+        """Computes character error rate between two words"""
+        # Convert to lists of characters
+        gt_chars = list(gt_word)
+        pred_chars = list(pred_word)
+        
+        # Levenshtein distance for characters
+        m, n = len(gt_chars), len(pred_chars)
+        dp = [[0] * (n + 1) for _ in range(m + 1)]
+        
+        for i in range(m + 1):
+            dp[i][0] = i
+        for j in range(n + 1):
+            dp[0][j] = j
+            
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                if gt_chars[i-1] == pred_chars[j-1]:
+                    dp[i][j] = dp[i-1][j-1]
+                else:
+                    dp[i][j] = min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]) + 1
+                    
+        return dp[m][n], m  # returns (edit distance, gt length)
+
     def update(
         self,
         gt: list[str],
         pred: list[str],
     ) -> None:
-        """Update the state of the metric with new predictions
-
-        Args:
-            gt: list of groung-truth character sequences
-            pred: list of predicted character sequences
-        """
+        """Update the state of the metric with new predictions"""
         if len(gt) != len(pred):
             raise AssertionError("prediction size does not match with ground-truth labels size")
 
+        # Update existing metrics
         for gt_word, pred_word in zip(gt, pred):
             _raw, _caseless, _anyascii, _unicase = string_match(gt_word, pred_word)
             self.raw += int(_raw)
@@ -94,15 +114,18 @@ class TextMatch:
             self.anyascii += int(_anyascii)
             self.unicase += int(_unicase)
 
+            # Calculate CER for this pair
+            char_errors, char_length = self._compute_cer(gt_word, pred_word)
+            self.char_errors += char_errors
+            self.total_chars += char_length
+
+        # Update WER
+        self.word_errors += sum(1 for g, p in zip(gt, pred) if g != p)
+        self.total_words += len(gt)
         self.total += len(gt)
 
     def summary(self) -> dict[str, float]:
-        """Computes the aggregated metrics
-
-        Returns:
-            a dictionary with the exact match score for the raw data, its lower-case counterpart, its anyascii
-            counterpart and its lower-case anyascii counterpart
-        """
+        """Computes the aggregated metrics"""
         if self.total == 0:
             raise AssertionError("you need to update the metric before getting the summary")
 
@@ -111,6 +134,8 @@ class TextMatch:
             caseless=self.caseless / self.total,
             anyascii=self.anyascii / self.total,
             unicase=self.unicase / self.total,
+            cer=self.char_errors / self.total_chars if self.total_chars > 0 else 1.0,
+            wer=self.word_errors / self.total_words if self.total_words > 0 else 1.0,
         )
 
     def reset(self) -> None:
@@ -119,6 +144,11 @@ class TextMatch:
         self.anyascii = 0
         self.unicase = 0
         self.total = 0
+        # New metrics
+        self.char_errors = 0
+        self.total_chars = 0
+        self.word_errors = 0
+        self.total_words = 0
 
 
 def box_iou(boxes_1: np.ndarray, boxes_2: np.ndarray) -> np.ndarray:

@@ -172,7 +172,7 @@ def evaluate(model, val_loader, batch_transforms, val_metric, amp=False):
 
     val_loss /= batch_cnt
     result = val_metric.summary()
-    return val_loss, result["raw"], result["unicase"]
+    return val_loss, result["raw"], result["unicase"], result["cer"], result["wer"]
 
 
 def main(args):
@@ -258,8 +258,8 @@ def main(args):
 
     if args.test_only:
         print("Running evaluation")
-        val_loss, exact_match, partial_match = evaluate(model, val_loader, batch_transforms, val_metric, amp=args.amp)
-        print(f"Validation loss: {val_loss:.6} (Exact: {exact_match:.2%} | Partial: {partial_match:.2%})")
+        val_loss, exact_match, partial_match, cer, wer = evaluate(model, val_loader, batch_transforms, val_metric, amp=args.amp)
+        print(f"Validation loss: {val_loss:.6} (Exact: {exact_match:.2%} | Partial: {partial_match:.2%} | CER: {cer:.2%} | WER: {wer:.2%})")
         return
 
     st = time.time()
@@ -392,14 +392,17 @@ def main(args):
         fit_one_epoch(model, train_loader, batch_transforms, optimizer, scheduler, amp=args.amp)
 
         # Validation loop at the end of each epoch
-        val_loss, exact_match, partial_match = evaluate(model, val_loader, batch_transforms, val_metric, amp=args.amp)
+        val_loss, exact_match, partial_match, cer, wer = evaluate(
+            model, val_loader, batch_transforms, val_metric, amp=args.amp
+        )
         if val_loss < min_loss:
             print(f"Validation loss decreased {min_loss:.6} --> {val_loss:.6}: saving state...")
             torch.save(model.state_dict(), Path(args.output_dir) / f"{exp_name}.pt")
             min_loss = val_loss
         print(
             f"Epoch {epoch + 1}/{args.epochs} - Validation loss: {val_loss:.6} "
-            f"(Exact: {exact_match:.2%} | Partial: {partial_match:.2%})"
+            f"(Exact: {exact_match:.2%} | Partial: {partial_match:.2%} | "
+            f"CER: {cer:.2%} | WER: {wer:.2%})"
         )
         # W&B
         if args.wb:
@@ -407,6 +410,8 @@ def main(args):
                 "val_loss": val_loss,
                 "exact_match": exact_match,
                 "partial_match": partial_match,
+                "val_CER": cer,
+                "val_WER": wer,
             })
         if args.early_stop and early_stopper.early_stop(val_loss):
             print("Training halted early due to reaching patience limit.")
