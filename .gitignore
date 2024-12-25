@@ -3,7 +3,9 @@ __pycache__
 *.pyc
 venv
 .venv
-
+.github
+.conda
+.vscode
 
 !*.md
 
