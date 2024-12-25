@@ -277,3 +277,36 @@ class ImageCropper:
         image.update(image_numpy)
 
         return image, label
+
+class GrayscaleConverter:
+    """Convert image to grayscale while maintaining 3 channels (h,w,3)
+    
+    This preprocessor converts RGB images to grayscale but maintains
+    a 3-channel output by duplicating the grayscale channel.
+    """
+    def __init__(self, log_level: int = logging.INFO) -> None:
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.setLevel(log_level)
+
+    def __call__(self, image: Image, label: typing.Any) -> typing.Tuple[Image, typing.Any]:
+        """Convert image to grayscale
+        
+        Args:
+            image (Image): Input image
+            label (Any): Label of image
+
+        Returns:
+            Image: Grayscale image with 3 channels
+            Any: Unchanged label
+        """
+        image_numpy = image.numpy()
+        
+        # Convert to grayscale if image is colored
+        if len(image_numpy.shape) == 3 and image_numpy.shape[-1] == 3:
+            # Convert to grayscale using weighted sum
+            grayscale = np.dot(image_numpy[..., :3], [0.2989, 0.5870, 0.1140])
+            # Stack the grayscale channel 3 times to maintain (h,w,3) shape
+            grayscale_3channel = np.stack([grayscale] * 3, axis=-1)
+            image.update(grayscale_3channel)
+        
+        return image, label
