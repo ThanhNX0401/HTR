@@ -161,7 +161,7 @@ def process_image(image):
 
     cropped_image_data = []
     img_with_boxes = img.copy()
-    print("det:",det_result)
+    # print("det:",det_result)
     for idx, box in enumerate(det_result[0]):
         # Extract the bounding box coordinates (rescale to image size if necessary)
         x1, y1, x2, y2 = (box[0] * img.shape[1], box[1] * img.shape[0],
@@ -368,4 +368,4 @@ with gr.Blocks(js=js_func, theme=theme) as demo: #,
         )
 
 print("Generating Gradio app LINK:")
-demo.launch()
+demo.launch(share=True)
