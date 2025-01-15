@@ -417,25 +417,33 @@ class ImageBinarizer(Transformer):
         # Convert the image to a numpy array and to grayscale
         image_numpy = image.numpy()
         gray = cv2.cvtColor(image_numpy, cv2.COLOR_BGR2GRAY)
+        
+        _, binary_mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-        # Create a structuring element for morphological operations
-        se = cv2.getStructuringElement(cv2.MORPH_RECT, self.structuring_element_size)
-
-        # Apply dilation
-        bg = cv2.morphologyEx(gray, cv2.MORPH_DILATE, se)
-
-        # Divide the original image by the dilated background
-        out_gray = cv2.divide(gray, bg, scale=255)
-
-        # Apply Otsu's thresholding
-        _, out_binary = cv2.threshold(out_gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-
-        # Invert the binary image
-        out_binary = 255 - out_binary
+        # Create a binary image with 3 channels
+        binary_image = np.stack((binary_mask,) * 3, axis=-1)  # Stack the binary mask to create 3 channels
 
         # Update the image with the binarized result
-        image.update(out_binary)
+        image.update(binary_image)
+
+        # Create a structuring element for morphological operations
+        # se = cv2.getStructuringElement(cv2.MORPH_RECT, self.structuring_element_size)
+
+        # # Apply dilation
+        # bg = cv2.morphologyEx(gray, cv2.MORPH_DILATE, se)
+
+        # # Divide the original image by the dilated background
+        # out_gray = cv2.divide(gray, bg, scale=255)
+
         
+        # Apply Otsu's thresholding
+        # _, out_binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+
         # binarized_image = Image.fromarray(out_binary)
+        # Update the image with the binarized result
+        # image.update(out_binary)
+        
+        
         
         return image, label
