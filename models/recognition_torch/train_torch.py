@@ -23,6 +23,109 @@ from mltu.annotations.images import CVImage
 from model import Network
 from configs import ModelConfigs
 
+dataset, vocab, max_len = [], set(), 0
+
+
+csv_path = "/kaggle/input/datatraingray/Data2/myData2.csv"  # Adjust the path as needed
+df1 = pd.read_csv(csv_path)
+
+for index, row in tqdm(df1.iterrows(), total=df1.shape[0]):
+    file_name = row['filename']  # The column in the CSV for file names
+    label = str(row['label'])  # The column in the CSV for labels
+    # file_name = file_name.replace('.jpg', '.png')
+    # Construct the file path (assuming the images are in the same directory structure)
+    rel_path = os.path.join("/kaggle/input/datatraingray/Data2/myData2", file_name)
+    # Check if the file exists
+    if not os.path.exists(rel_path):
+        print(f"File not found: {rel_path}")
+        continue
+
+    # Append the file path and label to the dataset
+    dataset.append([rel_path, label])
+    vocab.update(list(label))
+    max_len = max(max_len, len(label))
+
+csv_path = "/kaggle/input/datatraingray/DonthuocWords/DonthuocWords.csv"  # Adjust the path as needed
+df2 = pd.read_csv(csv_path)
+
+for index, row in tqdm(df2.iterrows(), total=df2.shape[0]):
+    file_name = row['filename']  # The column in the CSV for file names
+    label = str(row['label'])  # The column in the CSV for labels
+    # file_name = file_name.replace('.jpg', '.png')
+    # Construct the file path (assuming the images are in the same directory structure)
+    rel_path = os.path.join("/kaggle/input/datatraingray/DonthuocWords/images_grey", file_name)
+    # Check if the file exists
+    if not os.path.exists(rel_path):
+        print(f"File not found: {rel_path}")
+        continue
+
+    # Append the file path and label to the dataset
+    dataset.append([rel_path, label])
+    vocab.update(list(label))
+    max_len = max(max_len, len(label))
+
+csv_path = "/kaggle/input/datatraingray/words_images.csv"  # Adjust the path as needed
+df3 = pd.read_csv(csv_path)
+
+for index, row in tqdm(df3.iterrows(), total=df3.shape[0]):
+    file_name = row['filename']  # The column in the CSV for file names
+    label = str(row['label'])  # The column in the CSV for labels
+
+    # Construct the file path (assuming the images are in the same directory structure)
+    rel_path = os.path.join("/kaggle/input/datatraingray/words_images_csv", file_name)
+    # Check if the file exists
+    if not os.path.exists(rel_path):
+        print(f"File not found: {rel_path}")
+        continue
+
+    # Append the file path and label to the dataset
+    dataset.append([rel_path, label])
+    vocab.update(list(label))
+    max_len = max(max_len, len(label))
+
+
+csv_path = "/kaggle/input/datatraingray/train_gt.csv"  # Adjust the path as needed
+df4 = pd.read_csv(csv_path)
+
+for index, row in tqdm(df4.iterrows(), total=df4.shape[0]):
+    file_name = row['filename']  # The column in the CSV for file names
+    label = str(row['label'])  # The column in the CSV for labels
+    # file_name = file_name.replace('.jpg', '.png')
+    # Construct the file path (assuming the images are in the same directory structure)
+    rel_path = os.path.join("/kaggle/input/datatraingray/training_data_gray/new_train", file_name)
+    # Check if the file exists
+    if not os.path.exists(rel_path):
+        print(f"File not found: {rel_path}")
+        continue
+
+    # Append the file path and label to the dataset
+    dataset.append([rel_path, label])
+    vocab.update(list(label))
+    max_len = max(max_len, len(label))
+
+csv_path = "/kaggle/input/gnhk-data/train_processed.csv"  # Adjust the path as needed
+df5 = pd.read_csv(csv_path)
+
+for index, row in tqdm(df5.iterrows(), total=df5.shape[0]):
+    file_name = row['filename']  # The column in the CSV for file names
+    label = str(row['label'])  # The column in the CSV for labels
+    
+    # Skip if the label is "SPECIAl_CHARACTER"
+    if label == "SPECIAL_CHARACTER":
+        continue
+
+    # Construct the file path (assuming the images are in the same directory structure)
+    rel_path = os.path.join("/kaggle/input/gnhk-data/train_processed/images", file_name)
+    
+    # Check if the file exists
+    if not os.path.exists(rel_path):
+        print(f"File not found: {rel_path}")
+        continue
+
+    # Append the file path and label to the dataset
+    dataset.append([rel_path, label])
+    vocab.update(list(label))
+    max_len = max(max_len, len(label))
 
 configs = ModelConfigs()
 # Save vocab and maximum text length to configs
