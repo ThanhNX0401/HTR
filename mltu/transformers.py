@@ -90,10 +90,17 @@ class ImageResizer(Transformer):
             np.ndarray: Resized image
         """
         height, width = image.shape[:2]
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        
+        _, binary_mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+        # Create a binary image with 3 channels
+        binary_image = np.stack((binary_mask,) * 3, axis=-1)
+        
         ratio = min(width_target / width, height_target / height)
         new_w, new_h = int(width * ratio), int(height * ratio)
 
-        resized_image = cv2.resize(image, (new_w, new_h))
+        resized_image = cv2.resize(binary_image, (new_w, new_h))
         delta_w = width_target - new_w
         delta_h = height_target - new_h
         top, bottom = delta_h//2, delta_h-(delta_h//2)
