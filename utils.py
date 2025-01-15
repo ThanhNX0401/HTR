@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
+from typing import List, Tuple, Dict
 
-def calculate_avg_height_and_midpoints(df):
+def calculate_avg_height_and_midpoints(df: pd.DataFrame) -> Tuple[float, List[float]]:
     heights = []
     midpoints = []
     
@@ -14,42 +15,71 @@ def calculate_avg_height_and_midpoints(df):
         heights.append(height)
         midpoints.append(midpoint)
     
-    avg_height = np.mean(heights)
+    # Use median instead of mean to be more robust to outliers
+    avg_height = np.median(heights)
     return avg_height, midpoints
 
-def group_words_by_flexible_lines(df, avg_height, midpoints):
+def group_words_by_flexible_lines(df: pd.DataFrame, avg_height: float, midpoints: List[float]) -> List[List[Dict]]:
     lines = []
+    processed_indices = set()
     
-    for i, row in df.iterrows():
-        # Extract word coordinates and midpoint
-        coordinates = list(map(int, row['coordinates'].split(',')))
-        x_min, y_min, x_max, y_max = coordinates[0], coordinates[1], coordinates[2], coordinates[3]
+    # Sort words by y-coordinate (top to bottom)
+    sorted_indices = sorted(range(len(midpoints)), key=lambda i: midpoints[i])
+    
+    for i in sorted_indices:
+        if i in processed_indices:
+            continue
+            
+        current_midpoint = midpoints[i]
+        current_line = []
         
-        midpoint = midpoints[i]
+        # Get coordinates for the current word
+        coords_i = list(map(int, df.iloc[i]['coordinates'].split(',')))
+        y_min_i, y_max_i = coords_i[1], coords_i[3]
         
-        # Find or create a line based on vertical proximity (within a threshold of avg height)
-        added_to_line = False
-        for line in lines:
-            line_midpoint = np.mean([word['midpoint'] for word in line])  # Average of midpoints in the line
-            if abs(midpoint - line_midpoint) < avg_height * 0.6:  # Threshold set as 60% of average height
-                line.append({'prediction': row['prediction'], 'coordinates': (x_min, y_min, x_max, y_max), 'midpoint': midpoint})
-                added_to_line = True
-                break
+        # Add the current word to the line
+        current_line.append({
+            'prediction': df.iloc[i]['prediction'],
+            'coordinates': tuple(coords_i),
+            'midpoint': current_midpoint
+        })
+        processed_indices.add(i)
         
-        # If no line found, create a new line
-        if not added_to_line:
-            lines.append([{'prediction': row['prediction'], 'coordinates': (x_min, y_min, x_max, y_max), 'midpoint': midpoint}])
-
+        # Look for words that belong to the same line
+        for j in range(len(midpoints)):
+            if j in processed_indices:
+                continue
+                
+            coords_j = list(map(int, df.iloc[j]['coordinates'].split(',')))
+            y_min_j, y_max_j = coords_j[1], coords_j[3]
+            
+            # Calculate vertical overlap
+            overlap = min(y_max_i, y_max_j) - max(y_min_i, y_min_j)
+            min_height = min(y_max_i - y_min_i, y_max_j - y_min_j)
+            overlap_ratio = overlap / min_height if min_height > 0 else 0
+            
+            # Check if words belong to the same line using multiple criteria
+            vertical_distance = abs(midpoints[j] - current_midpoint)
+            if (vertical_distance < avg_height * 0.5) or (overlap_ratio > 0.5):
+                current_line.append({
+                    'prediction': df.iloc[j]['prediction'],
+                    'coordinates': tuple(coords_j),
+                    'midpoint': midpoints[j]
+                })
+                processed_indices.add(j)
+        
+        lines.append(current_line)
+    
     return lines
 
-def sort_lines_and_words(lines):
-    # Sort words within each line by their x_min (horizontal position)
+def sort_lines_and_words(lines: List[List[Dict]]) -> List[List[Dict]]:
+    # Sort words within each line by x-coordinate
     for line in lines:
-        line.sort(key=lambda word: word['coordinates'][0])  # Sort by x_min
-
-    # Sort lines themselves by their average midpoint (top to bottom order)
-    lines.sort(key=lambda line: np.mean([word['midpoint'] for word in line]))  # Sort by average midpoint
-
+        line.sort(key=lambda word: word['coordinates'][0])
+    
+    # Sort lines by average y-coordinate
+    lines.sort(key=lambda line: np.mean([word['midpoint'] for word in line]))
+    
     return lines
 
 def reconstruct_paragraph(lines):

@@ -58,8 +58,8 @@ def create_gradio_interface():
 
             # Set up the button click event for the Clear button
             clear_button.click(
-                fn=lambda: (None, ""),  # Clear outputs
+                fn=lambda: (None, None, ""),  # Clear outputs
                 inputs=None,
-                outputs=[outputs, result]
+                outputs=[image_input, outputs, result]
             )
     return demo

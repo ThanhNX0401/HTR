@@ -400,3 +400,42 @@ class ImageShowCV2(Transformer):
         self.image_queue.put((image, label))
 
         return image, label
+
+class ImageBinarizer(Transformer):
+    """Binarize the input image using morphological operations and Otsu's thresholding.
+    
+    Attributes:
+        structuring_element_size (tuple): Size of the structuring element for morphological operations.
+    """
+    def __init__(self, structuring_element_size: tuple = (8, 8)) -> None:
+        self.structuring_element_size = structuring_element_size
+
+    def __call__(self, image: Image, label: typing.Any) -> typing.Tuple[Image, typing.Any]:
+        if not isinstance(image, Image):
+            raise TypeError(f"Expected image to be of type Image, got {type(image)}")
+
+        # Convert the image to a numpy array and to grayscale
+        image_numpy = image.numpy()
+        gray = cv2.cvtColor(image_numpy, cv2.COLOR_BGR2GRAY)
+
+        # Create a structuring element for morphological operations
+        se = cv2.getStructuringElement(cv2.MORPH_RECT, self.structuring_element_size)
+
+        # Apply dilation
+        bg = cv2.morphologyEx(gray, cv2.MORPH_DILATE, se)
+
+        # Divide the original image by the dilated background
+        out_gray = cv2.divide(gray, bg, scale=255)
+
+        # Apply Otsu's thresholding
+        _, out_binary = cv2.threshold(out_gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
+        # Invert the binary image
+        out_binary = 255 - out_binary
+
+        # Update the image with the binarized result
+        image.update(out_binary)
+        
+        # binarized_image = Image.fromarray(out_binary)
+        
+        return image, label
