@@ -12,7 +12,7 @@ class ImageToWordModel(OnnxInferenceModel):
 
     def __init__(self, model_path: str, *args, **kwargs):
         if not ImageToWordModel.model_downloaded:
-            gdown.download("https://drive.google.com/file/d/1I7TAd8_C7xRzgzMSs6cNvMjUzwB8h2Ny/view?usp=sharing", model_path, quiet=False)
+            gdown.download("https://drive.google.com/uc?id=1I7TAd8_C7xRzgzMSs6cNvMjUzwB8h2Ny", model_path, quiet=False)
             ImageToWordModel.model_downloaded = True
 
         super().__init__(model_path=model_path, *args, **kwargs)
@@ -32,7 +32,7 @@ class DetectionModel:
 
     def __init__(self, model_path: str):
         if not DetectionModel.model_downloaded:
-            gdown.download("https://drive.google.com/file/d/1ZJoys_gCy9GzbFgo5L5bk8kO5z5nwexu/view?usp=drive_link", model_path, quiet=False)
+            gdown.download("https://drive.google.com/uc?id=1ZJoys_gCy9GzbFgo5L5bk8kO5z5nwexu", model_path, quiet=False)
             DetectionModel.model_downloaded = True
 
         self.det_model = linknet_resnet50(model_path)
