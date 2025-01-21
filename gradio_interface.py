@@ -29,7 +29,7 @@ def create_gradio_interface():
     with gr.Blocks(js=js_func, theme=theme) as demo:
         with gr.Column(variant="panel"):
             gr.Markdown("<center><h1 style='font-size: 40px;'>Vietnamese Handwritten Text Recognition Model</h1><center>")
-            gr.Markdown("<center><span style='font-size:24px;'>This is a project to run Vietnamese handwritten recognition model</span><center>")
+            gr.Markdown("<center><span style='font-size:24px;'>Nguyen Xuan Thanh - 20203766</span><center>")
 
         
         with gr.Row():
@@ -42,11 +42,11 @@ def create_gradio_interface():
                     submit_button = gr.Button("Submit", variant="primary")
 
             with gr.Column(variant="panel", scale=1):
-                gr.Markdown("<h2 style='font-size: 24px;'>Box Image</h2>")
+                gr.Markdown("<h2 style='font-size: 24px;'>BBox Image</h2>")
                 outputs = gr.Image()
                 
             with gr.Column(variant="panel", scale=1):
-                gr.Markdown("<h2 style='font-size: 24px;'>Box Image</h2>")
+                gr.Markdown("<h2 style='font-size: 24px;'>Text</h2>")
                 result = gr.Textbox(label="Output Text", placeholder="The regconition text will appear here...", lines=5)
             
             # Set up the button click event for the Submit button

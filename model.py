@@ -1,3 +1,5 @@
+import os
+import gdown
 import numpy as np
 from mltu.inferenceModel import OnnxInferenceModel
 from mltu.utils.text_utils import ctc_decoder
@@ -6,8 +8,14 @@ from onnxtr.models import linknet_resnet50
 from onnxtr.models.detection import detection_predictor
 
 class ImageToWordModel(OnnxInferenceModel):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    model_downloaded = False
+
+    def __init__(self, model_path: str, *args, **kwargs):
+        if not ImageToWordModel.model_downloaded:
+            gdown.download("https://drive.google.com/file/d/1I7TAd8_C7xRzgzMSs6cNvMjUzwB8h2Ny/view?usp=sharing", model_path, quiet=False)
+            ImageToWordModel.model_downloaded = True
+
+        super().__init__(model_path=model_path, *args, **kwargs)
 
     def predict(self, image: np.ndarray):
         image = ImageResizer.resize_maintaining_aspect_ratio(image, *self.input_shapes[0][1:3][::-1])
@@ -20,7 +28,13 @@ class ImageToWordModel(OnnxInferenceModel):
         return text
 
 class DetectionModel:
+    model_downloaded = False
+
     def __init__(self, model_path: str):
+        if not DetectionModel.model_downloaded:
+            gdown.download("https://drive.google.com/file/d/1ZJoys_gCy9GzbFgo5L5bk8kO5z5nwexu/view?usp=drive_link", model_path, quiet=False)
+            DetectionModel.model_downloaded = True
+
         self.det_model = linknet_resnet50(model_path)
         self.detection = detection_predictor(arch=self.det_model)
 

@@ -7,6 +7,7 @@ from PIL import Image
 import csv
 from typing import Tuple, List, Union
 from gradio_image_prompter import ImagePrompter
+import gdown
 
 from model import ImageToWordModel, DetectionModel
 from utils import (
@@ -37,7 +38,7 @@ def process_image(image):
     print("start")
     
     img = np.array(image)
-    detection_model = DetectionModel("/content/drive/MyDrive/final_model/detection/linknet_resnet50_100.onnx")
+    detection_model = DetectionModel("models_train/linknet_resnet50_bestb.onnx")
     det_result = detection_model.predict(img)
 
     output_folder='cropped_images'
@@ -64,7 +65,7 @@ def process_image(image):
                 cropped_img = img[y1_int:y2_int, x1_int:x2_int]
     
                 # Draw the bounding box on the image
-                cv2.rectangle(img_with_boxes, (x1_int, y1_int), (x2_int, y2_int), (0, 255, 0), 2)
+                cv2.rectangle(img_with_boxes, (x1_int, y1_int), (x2_int, y2_int), (0, 0, 255), 2)
             else:
                 # If coordinates are invalid, use the full image
                 continue
@@ -94,12 +95,11 @@ def process_image(image):
     # Convert img_with_boxes back to PIL format to return
     img_with_boxes = Image.fromarray(img_with_boxes)
     
-    print("5")
     # Load the original CSV file
     df = pd.read_csv(csv_filepath)
 
     # Initialize the model
-    model = ImageToWordModel(model_path="/content/drive/MyDrive/final_model/resnet/model.onnx")
+    model = ImageToWordModel(model_path="models_train/model_vgg.onnx")
 
     # Add a new column 'prediction' if it doesn't exist
     if 'prediction' not in df.columns:
@@ -111,19 +111,9 @@ def process_image(image):
         image = cv2.imread(image_path.replace("\\", "/"))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-
-        # Step 3: Convert grayscale to a 3-channel image by stacking the grayscale image along the third axis
-        image = np.stack((gray_image,)*3, axis=-1)
-
-        # image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        # print(image_gray.shape, image_gray.size)
-        # # Expand dimensions to make it (height, width, 1)
-        # # image1 = image_gray[:, :, None]
-
-        # image1 = np.expand_dims(image_gray, axis=-1)
-        # print(image1.shape)
-        # Make a prediction
+        # gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        # image = np.stack((gray_image,)*3, axis=-1)
+        
         prediction_text = model.predict(image)
         df.at[idx, 'prediction'] = prediction_text
 
@@ -141,11 +131,6 @@ def process_image(image):
 
     return reconstructed_paragraph, img_with_boxes
 
-
-# Define a variable to store the points
-# points_variable = None
-# def process_image(image):
-#     return text=get_text(image)
 
 # Function to process the inputs and return cropped images or original image
 def process_and_crop(prompts):
