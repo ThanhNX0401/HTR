@@ -8,7 +8,7 @@ import csv
 from typing import Tuple, List, Union
 from gradio_image_prompter import ImagePrompter
 import gdown
-
+from docx import Document
 from model import ImageToWordModel, DetectionModel
 from utils import (
     calculate_avg_height_and_midpoints,
@@ -16,6 +16,15 @@ from utils import (
     sort_lines_and_words,
     reconstruct_paragraph
 )
+
+def export_to_word(text, file_path="output_text.docx"):
+    # Create a new Document
+    doc = Document()
+    # Add the extracted text to the Word document
+    doc.add_paragraph(text)
+    # Save the document to the specified path
+    doc.save(file_path)
+    return file_path
 
 def clear_old_files(output_cropped_dir='cropped_images', output_bboxes_dir='bbox_image', csv_file_path='cropped_images_coordinates.csv'):
     # Remove old cropped images directory
@@ -128,8 +137,10 @@ def process_image(image):
 
     # Reconstruct the paragraph from the sorted lines and words
     reconstructed_paragraph = reconstruct_paragraph(sorted_lines)
+    
+    word_file_path = export_to_word(reconstructed_paragraph)
 
-    return reconstructed_paragraph, img_with_boxes
+    return reconstructed_paragraph, img_with_boxes, word_file_path
 
 
 # Function to process the inputs and return cropped images or original image
@@ -140,7 +151,7 @@ def process_and_crop(prompts):
     
     if points_variable is None or len(points_variable) == 0:
         # If points_variable is empty, return the text from the original image
-        return process_image(image)  # No gallery output, only text
+        return process_image(image) 
 
     # If points_variable has coordinates, crop the image based on each bounding box
     cropped_images = []
