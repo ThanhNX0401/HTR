@@ -67,6 +67,32 @@ class ImageResizer(Transformer):
         return original_image
 
     @staticmethod
+    def correct_skew(image: np.ndarray, delta: int = 1, limit: int = 20) -> typing.Tuple[float, np.ndarray]:
+        """Corrects skew in the image by detecting the best rotation angle."""
+        def determine_score(arr, angle):
+            data = inter.rotate(arr, angle, reshape=False, order=0)
+            histogram = np.sum(data, axis=1, dtype=float)
+            score = np.sum((histogram[1:] - histogram[:-1]) ** 2, dtype=float)
+            return score
+
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+
+        scores = []
+        angles = np.arange(-limit, limit + delta, delta)
+        for angle in angles:
+            score = determine_score(thresh, angle)
+            scores.append(score)
+
+        best_angle = angles[scores.index(max(scores))]
+
+        (h, w) = image.shape[:2]
+        center = (w // 2, h // 2)
+        M = cv2.getRotationMatrix2D(center, best_angle, 1.0)
+        rotated = cv2.warpAffine(image, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+
+        return best_angle, rotated
+    
     def resize_maintaining_aspect_ratio(image: np.ndarray, width_target: int, height_target: int, padding_color: typing.Tuple[int]=(0, 0, 0)) -> np.ndarray:
         """ Resize image maintaining aspect ratio and pad with padding_color.
 
@@ -79,22 +105,36 @@ class ImageResizer(Transformer):
         Returns:
             np.ndarray: Resized image
         """
-        height, width = image.shape[:2]
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        _, corrected_image = correct_skew(image)
+
+        # Convert to grayscale
+        gray = cv2.cvtColor(corrected_image, cv2.COLOR_BGR2GRAY)
+        denoised = cv2.bilateralFilter(gray, d=3, sigmaColor=75, sigmaSpace=75)
+
+        # Apply threshold and invert (black foreground)
+        _, binary_mask = cv2.threshold(denoised, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        inverted_binary = cv2.bitwise_not(binary_mask)  # Invert to have black as foreground
+
+        # Apply dilation to the inverted binary mask
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))
+        dilated_image = cv2.dilate(inverted_binary, kernel, iterations=1)
+        dilated_image = 255 - dilated_image
         
-        _, binary_mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # Apply morphological operations (open) on the dilated image
+        # morph_image = cv2.morphologyEx(binary_mask, cv2.MORPH_OPEN, kernel, iterations=1)
 
         # Create a binary image with 3 channels
-        binary_image = np.stack((binary_mask,) * 3, axis=-1)
-        
+        binary_image = np.stack((dilated_image,) * 3, axis=-1)
+        height, width = corrected_image.shape[:2]
         ratio = min(width_target / width, height_target / height)
         new_w, new_h = int(width * ratio), int(height * ratio)
 
+        # Resize the image
         resized_image = cv2.resize(binary_image, (new_w, new_h))
         delta_w = width_target - new_w
         delta_h = height_target - new_h
-        top, bottom = delta_h//2, delta_h-(delta_h//2)
-        left, right = delta_w//2, delta_w-(delta_w//2)
+        top, bottom = delta_h // 2, delta_h - (delta_h // 2)
+        left, right = delta_w // 2, delta_w - (delta_w // 2)
 
         new_image = cv2.copyMakeBorder(resized_image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=padding_color)
 
