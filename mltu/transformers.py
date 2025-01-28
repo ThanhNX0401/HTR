@@ -8,8 +8,34 @@ import importlib
 import numpy as np
 
 from . import Image
-
+from scipy.ndimage import interpolation as inter
 from mltu.annotations.detections import Detections
+
+def correct_skew(image: np.ndarray, delta: int = 1, limit: int = 20) -> typing.Tuple[float, np.ndarray]:
+    """Corrects skew in the image by detecting the best rotation angle."""
+    def determine_score(arr, angle):
+        data = inter.rotate(arr, angle, reshape=False, order=0)
+        histogram = np.sum(data, axis=1, dtype=float)
+        score = np.sum((histogram[1:] - histogram[:-1]) ** 2, dtype=float)
+        return score
+
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+
+    scores = []
+    angles = np.arange(-limit, limit + delta, delta)
+    for angle in angles:
+        score = determine_score(thresh, angle)
+        scores.append(score)
+
+    best_angle = angles[scores.index(max(scores))]
+
+    (h, w) = image.shape[:2]
+    center = (w // 2, h // 2)
+    M = cv2.getRotationMatrix2D(center, best_angle, 1.0)
+    rotated = cv2.warpAffine(image, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+
+    return best_angle, rotated
 
 
 class Transformer:
@@ -67,32 +93,6 @@ class ImageResizer(Transformer):
         return original_image
 
     @staticmethod
-    def correct_skew(image: np.ndarray, delta: int = 1, limit: int = 20) -> typing.Tuple[float, np.ndarray]:
-        """Corrects skew in the image by detecting the best rotation angle."""
-        def determine_score(arr, angle):
-            data = inter.rotate(arr, angle, reshape=False, order=0)
-            histogram = np.sum(data, axis=1, dtype=float)
-            score = np.sum((histogram[1:] - histogram[:-1]) ** 2, dtype=float)
-            return score
-
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
-
-        scores = []
-        angles = np.arange(-limit, limit + delta, delta)
-        for angle in angles:
-            score = determine_score(thresh, angle)
-            scores.append(score)
-
-        best_angle = angles[scores.index(max(scores))]
-
-        (h, w) = image.shape[:2]
-        center = (w // 2, h // 2)
-        M = cv2.getRotationMatrix2D(center, best_angle, 1.0)
-        rotated = cv2.warpAffine(image, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
-
-        return best_angle, rotated
-    
     def resize_maintaining_aspect_ratio(image: np.ndarray, width_target: int, height_target: int, padding_color: typing.Tuple[int]=(0, 0, 0)) -> np.ndarray:
         """ Resize image maintaining aspect ratio and pad with padding_color.
 
@@ -105,7 +105,7 @@ class ImageResizer(Transformer):
         Returns:
             np.ndarray: Resized image
         """
-        _, corrected_image = correct_skew(image)
+        _, corrected_image = self.correct_skew(image)
 
         # Convert to grayscale
         gray = cv2.cvtColor(corrected_image, cv2.COLOR_BGR2GRAY)
