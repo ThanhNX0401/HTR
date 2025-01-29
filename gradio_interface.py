@@ -49,7 +49,7 @@ def create_gradio_interface():
                 gr.Markdown("<h2 style='font-size: 24px;'>Text</h2>")
                 result = gr.Textbox(label="Output Text", placeholder="The regconition text will appear here...", lines=5)
                 
-                gr.Markdown("<h2 style='font-size: 24px;'>Download Word File</h2>")
+                gr.Markdown("<h2 style='font-size: 24px;'>File Export</h2>")
                 download_word_file = gr.File(label="Download Word File")
             
             # Set up the button click event for the Submit button

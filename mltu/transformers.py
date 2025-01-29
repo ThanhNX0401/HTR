@@ -105,7 +105,7 @@ class ImageResizer(Transformer):
         Returns:
             np.ndarray: Resized image
         """
-        _, corrected_image = self.correct_skew(image)
+        _, corrected_image = correct_skew(image)
 
         # Convert to grayscale
         gray = cv2.cvtColor(corrected_image, cv2.COLOR_BGR2GRAY)
