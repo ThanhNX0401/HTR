@@ -74,7 +74,7 @@ def process_image(image):
                 cropped_img = img[y1_int:y2_int, x1_int:x2_int]
     
                 # Draw the bounding box on the image
-                cv2.rectangle(img_with_boxes, (x1_int, y1_int), (x2_int, y2_int), (0, 0, 255), 2)
+                cv2.rectangle(img_with_boxes, (x1_int, y1_int), (x2_int, y2_int), (255, 0, 0), 2)
             else:
                 # If coordinates are invalid, use the full image
                 continue
