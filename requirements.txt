@@ -6,7 +6,7 @@ pandas
 numpy
 opencv-python
 Pillow
-onnxruntime  # onnxruntime-gpu for GPU support
+onnxruntime 
 matplotlib
 gradio-image-prompter
 gradio
