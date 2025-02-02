@@ -1,5 +1,5 @@
 # Nguyen Xuan Thanh - 20203766
-### Vietnamese Handwritten Text Recognition 
+### Vietnamese Handwritten Text Recognition - branch modelDocv3
 - Step 1: Install the dependencies
 pip install -r requirements.txt
 
