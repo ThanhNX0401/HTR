@@ -12,7 +12,7 @@ python app.py
 
 After running app.py there will be 2 link you can use: local link and public link.
 
-#Notice
+# Notice
 This project run on pytorch, if it got error, make sure you uninstall tensorflow first.
 
 
