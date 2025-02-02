@@ -4,6 +4,7 @@ import logging
 import numpy as np
 from pathlib import Path
 from datetime import datetime
+import wandb
 
 import torch.onnx
 from torch.utils.tensorboard import SummaryWriter
@@ -126,6 +127,25 @@ class EarlyStopping(Callback):
         if self.stopped_epoch > 0 and self.verbose:
             self.logger.info(f"Epoch {self.stopped_epoch}: early stopping")
 
+class WandbCallback(Callback):
+    def __init__(self, project_name, run_name=None, config=None):
+        super().__init__()
+        self.project_name = project_name
+        self.run_name = run_name
+        self.config = config
+        self.run = None
+
+    # def on_train_begin(self, logs=None):
+    #     self.run = wandb.init(project=self.project_name, name=self.run_name, config=self.config)
+
+    def on_epoch_end(self, epoch, logs=None):
+        if logs:
+            wandb.log(logs, step=epoch)
+
+    # def on_train_end(self, logs=None):
+    #     if self.run is not None:
+    #         self.run.finish()
+        
 def assign_mode(mode: str):
     if mode not in ["min", "max", "max_equal", "min_equal"]:
         raise ValueError(
@@ -210,7 +230,7 @@ class TensorBoard(Callback):
             comment: str = None, 
             histogram: bool=False,
             train_name: str = "train",
-            val_name: str = "test",
+            val_name: str = "val",
             train_writer: SummaryWriter = None,
             val_writer: SummaryWriter = None,
         ):
